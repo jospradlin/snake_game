@@ -1,0 +1,5 @@
+
+- We need to compile Rust to WebAssembly code
+-- WebAssembly can be executed in the browser
+-- It runs at native speed
+--- 3d apps, CAD, VR/AR, system application, games
