@@ -3,9 +3,9 @@ import { wasm } from "webpack";
 
 init().then(wasm => {
   const CELL_SIZE = 20;
-  const WORLD_WIDTH = 16;
+  const WORLD_WIDTH = 32;
   const snakeSpawnIndex = Math.floor(Math.random() * (WORLD_WIDTH * WORLD_WIDTH));
-  const STARTING_SNAKE_SIZE = 3;
+  const STARTING_SNAKE_SIZE = 12;
 
   const world = World.new(WORLD_WIDTH, snakeSpawnIndex, STARTING_SNAKE_SIZE);
   const worldWidth = world.width();
@@ -15,8 +15,6 @@ init().then(wasm => {
   
   canvas.height = worldWidth * CELL_SIZE;
   canvas.width =  worldWidth * CELL_SIZE;
-
-  
 
   document.addEventListener("keydown", (e) => {
     switch(e.code) {
@@ -73,7 +71,7 @@ init().then(wasm => {
       const col = cellIndex % worldWidth;
       const row = Math.floor(cellIndex / worldWidth);
       
-      ctx.fillStyle = i === 0? "#7878db" : "#000000";
+      ctx.fillStyle = i === 0? "#121276" : "#5555ff";
 
       ctx.beginPath();
       ctx.fillRect(
@@ -95,7 +93,7 @@ init().then(wasm => {
   }
 
   function update() {
-    const fps = 3;
+    const fps = 5;
 
     //setInterval (many times) vs setTimeout (once)
     setTimeout( () => {

@@ -21,14 +21,13 @@ pub enum Direction {
 
 // Snake
 #[wasm_bindgen]
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct SnakeCell(usize);
 
 #[wasm_bindgen]
 struct Snake {
     body: Vec<SnakeCell>,
     direction: Direction,
-    size: usize,
 }
 
 #[wasm_bindgen]
@@ -43,8 +42,7 @@ impl Snake {
 //: vec!(SnakeCell(spawn_index))
         Snake {
             body,
-            direction: Direction::DOWN,
-            size,
+            direction: Direction::RIGHT,
         }
     }
 
@@ -57,6 +55,7 @@ struct World {
     width: usize,
     size: usize,
     snake: Snake,
+    next_cell: Option<SnakeCell>
 }
 
 #[wasm_bindgen]
@@ -66,6 +65,7 @@ impl World {
             width,
             size: width * width,
             snake: Snake::new(snake_index, starting_size),
+            next_cell: None,
         }
     }
 
@@ -98,25 +98,39 @@ impl World {
 
     pub fn step(&mut self) {
         let temp = self.snake.body.clone();
-        let update_cell = self.gen_next_snake_cell(0);
-        self.snake.body[0] = update_cell;
+
+        match self.next_cell {
+            Some(cell) => {
+                self.snake.body[0] = cell;
+                self.next_cell = None;
+            },
+            None => {
+                self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
+            }
+        }
 
         let snake_length = self.snake.body.len();
         for i in 1..snake_length {
             self.snake.body[i] = SnakeCell(temp[i-1].0);
         }
+
+
+
+
+  
+
+
     }
 
-    fn gen_next_snake_cell(&self, snake_index: usize) -> SnakeCell {
+    fn gen_next_snake_cell(&self, direction: &Direction) -> SnakeCell {
         //let snake_cells = self.snake_cells();
         //let snake_index = self.snake_head_index();
 
-        let snake_index = self.snake.body[snake_index].0;
+        let snake_index = self.snake.body[0].0;
         let row = snake_index / self.width;
-        let col = snake_index % self.width;
 
         // If needed - review 77 and 78 to align to Training code
-        return match self.snake.direction {
+        return match direction {
             Direction::UP => {
                 let treshold = snake_index - (row * self.width);
                 if snake_index == treshold {
@@ -154,17 +168,12 @@ impl World {
     }
 
     pub fn handle_input(&mut self, new_direction: Direction) {
-        if self.snake.direction == Direction::UP && new_direction == Direction::DOWN {
-            return;
-        } else if self.snake.direction == Direction::DOWN && new_direction == Direction::UP {
-            return;
-        } else if self.snake.direction == Direction::LEFT && new_direction == Direction::RIGHT {
-            return;
-        } else if self.snake.direction == Direction::RIGHT && new_direction == Direction::LEFT {
-            return;
-        } else {
-            self.snake.direction = new_direction;
-        }
+        let next_cell = self.gen_next_snake_cell(&new_direction);
+
+        if self.snake.body[1].0 == next_cell.0 { return; }
+
+        self.next_cell = Some(next_cell);
+        self.snake.direction = new_direction;
     }
 }
 
