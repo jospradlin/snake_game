@@ -1,4 +1,4 @@
-import init, { World, Direction } from "snake_game";
+import init, { World, Direction, GameStatus } from "snake_game";
 import { rnd } from "./utils/rnd";
 import { wasm } from "webpack";
 
@@ -13,7 +13,7 @@ init().then(wasm => {
 
   const gameControlBtn = document.getElementById("game-control-btn");
   const gameStatus = document.getElementById("game-status");
-  
+  const gamePoints = document.getElementById("points");
   const canvas = <HTMLCanvasElement> document.getElementById("snake-canvas");
   const ctx = canvas.getContext("2d")
   
@@ -84,20 +84,24 @@ init().then(wasm => {
       snakeLength,
     )
 
-    snakeCells.forEach((cellIndex, i) => {
-      const col = cellIndex % worldWidth;
-      const row = Math.floor(cellIndex / worldWidth);
-      
-      ctx.fillStyle = i === 0? "#121276" : "#5555ff";
+    // could use 'reverse()' on SnakeCells array as alternative
+    snakeCells
+      .filter((cellIdx, i) => !(i > 0 && cellIdx === snakeCells[0]))
+      .forEach((cellIndex, i) => {
+        const col = cellIndex % worldWidth;
+        const row = Math.floor(cellIndex / worldWidth);
+        
+        // snake head getting overwritten by body on 'crash'
+        ctx.fillStyle = i === 0? "#121276" : "#5555ff";
 
-      ctx.beginPath();
-      ctx.fillRect(
-        col * CELL_SIZE,
-        row * CELL_SIZE,
-        CELL_SIZE,
-        CELL_SIZE
-      );
-    });
+        ctx.beginPath();
+        ctx.fillRect(
+          col * CELL_SIZE,
+          row * CELL_SIZE,
+          CELL_SIZE,
+          CELL_SIZE
+        );
+      });
 
     //OLD -const snakeIndex = world.snake_head_index();
 
@@ -106,13 +110,14 @@ init().then(wasm => {
 
   function drawGameStatus() {
     gameStatus.textContent = world.game_status_text();
+    gamePoints.textContent = world.points().toString();
   }
 
   function draw_reward_cell() {
     const rewardCellLocation = world.reward_cell();
     const reward_col = rewardCellLocation % worldWidth;
     const reward_row = Math.floor(rewardCellLocation / worldWidth);
-      
+
       ctx.fillStyle = "#ff0000"; 
 
       ctx.beginPath();
@@ -123,10 +128,6 @@ init().then(wasm => {
         CELL_SIZE
       );
 
-    //OLD -const snakeIndex = world.snake_head_index();
-      if (rewardCellLocation == 1000) {
-        alert("you won!");
-      }
     ctx.stroke();
   }
   
@@ -139,8 +140,12 @@ init().then(wasm => {
   }
 
   function play() {
-
     const fps = 3;
+    const status = world.status();
+    if (status == GameStatus.WON || status == GameStatus.LOST) {
+      gameControlBtn.textContent = "Replay?"
+      return;
+    }
 
     //setInterval (many times) vs setTimeout (once)
     setTimeout( () => {

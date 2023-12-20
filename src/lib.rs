@@ -69,8 +69,9 @@ struct World {
     size: usize,
     snake: Snake,
     next_cell: Option<SnakeCell>,
-    reward_cell: usize,
+    reward_cell: Option<usize>,
     status: Option<GameStatus>,
+    points: usize,
 }
 
 #[wasm_bindgen]
@@ -87,6 +88,7 @@ impl World {
             snake,
             next_cell: None,
             status: None,
+            points: 0,
         }
     }
 
@@ -96,6 +98,10 @@ impl World {
 
     pub fn status(&self) -> Option<GameStatus> {
         self.status
+    }
+
+    pub fn points(&self) -> usize {
+        self.points
     }
 
     pub fn game_status_text(&self) -> String {
@@ -115,8 +121,11 @@ impl World {
         self.size
     }
 
-    pub fn reward_cell(&self) -> usize {
-        self.reward_cell
+    pub fn reward_cell(&self) -> Option<usize> {
+        match self.reward_cell {
+            Some(_) => self.reward_cell,
+            None => None,
+        }
     }
 
     pub fn snake_head_index(&self) -> usize {
@@ -138,7 +147,7 @@ impl World {
         self.snake.body.len()
     }
 
-    fn set_random_reward_cell(max_size: usize, snake_body: &Vec<SnakeCell>) -> usize {
+    fn set_random_reward_cell(max_size: usize, snake_body: &Vec<SnakeCell>) -> Option<usize> {
 
         let mut reward_cell;
         loop {
@@ -146,7 +155,7 @@ impl World {
             if !snake_body.contains(&SnakeCell(reward_cell)) { break;}
         }
         
-        reward_cell
+        Some(reward_cell)
     }
 
     pub fn step(&mut self) {
@@ -165,16 +174,22 @@ impl World {
                     }
                 }
         
-                let snake_length = self.snake.body.len();
-                for i in 1..snake_length {
+                for i in 1..self.snake_length() {
                     self.snake.body[i] = SnakeCell(temp[i-1].0);
                 }
+
+                if self.snake.body[1..self.snake_length()].contains(&self.snake.body[0]) {
+                    self.reward_cell = None;
+                    self.status = Some(GameStatus::LOST);
+                }
         
-                if self.reward_cell == self.snake_head_index() {
+                if self.reward_cell == Some(self.snake_head_index()) {
                     if self.snake_length() < self.size {
+                        self.points += 1;
                         self.reward_cell = World::set_random_reward_cell(self.size, &self.snake.body)
                     } else {
-                        self.reward_cell = 1000;
+                        self.reward_cell = None;
+                        self.status = Some(GameStatus::WON);
                     }
                     self.snake.body.push(SnakeCell(self.snake.body[1].0));
                     
