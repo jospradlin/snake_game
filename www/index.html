@@ -17,6 +17,21 @@
             justify-content: center;
             flex-direction: column;
         }
+        .game-panel {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .flex {
+            display: flex;
+        }
+        .label {
+            font-weight: bold;
+            margin-left: 10px;
+            margin-bottom: 5px;
+        }
+        .play-button {
+            margin-left: 10px;
+        }
         .canvas-wrapper {
             background-color: #015a01;
         }
@@ -25,7 +40,22 @@
 </head>
 <body>
     <div class="content-wrapper">
-        SNAKE GAME
+        THE SNAKE GAME
+        <div class="game-panel">
+            <div class="flex">
+                <div class="label">
+                    Status:
+                </div>
+                <div class="label" id="game-status">
+                    None
+                </div>
+            </div>
+            <div class="flex">
+                <button class="play-button" id="game-control-btn">
+                    Play
+                </button>
+            </div>
+        </div>
         <canvas class="canvas-wrapper" id="snake-canvas"></canvas>
     </div>
     <script src="./bootstrap.js"></script>

@@ -24,6 +24,15 @@ pub enum Direction {
 }
 
 
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum GameStatus {
+    WON,
+    LOST,
+    PLAYED,
+}
+
+
 // Snake
 #[wasm_bindgen]
 #[derive(Clone, Copy, PartialEq)]
@@ -61,6 +70,7 @@ struct World {
     snake: Snake,
     next_cell: Option<SnakeCell>,
     reward_cell: usize,
+    status: Option<GameStatus>,
 }
 
 #[wasm_bindgen]
@@ -76,6 +86,24 @@ impl World {
             reward_cell: World::set_random_reward_cell(size, &snake.body),
             snake,
             next_cell: None,
+            status: None,
+        }
+    }
+
+    pub fn start_game(&mut self) {
+        self.status = Some(GameStatus::PLAYED);
+    }
+
+    pub fn status(&self) -> Option<GameStatus> {
+        self.status
+    }
+
+    pub fn game_status_text(&self) -> String {
+        match self.status {
+            Some(GameStatus::WON) => String::from("You have won!"),
+            Some(GameStatus::LOST) => String::from("You have lost!"),
+            Some(GameStatus::PLAYED) => String::from("Playing"),
+            None => String::from("No Status"),
         }
     }
 
@@ -122,32 +150,39 @@ impl World {
     }
 
     pub fn step(&mut self) {
-        let temp = self.snake.body.clone();
 
-        match self.next_cell {
-            Some(cell) => {
-                self.snake.body[0] = cell;
-                self.next_cell = None;
+        match self.status {
+            Some(GameStatus::PLAYED) => {
+                let temp = self.snake.body.clone();
+
+                match self.next_cell {
+                    Some(cell) => {
+                        self.snake.body[0] = cell;
+                        self.next_cell = None;
+                    },
+                    None => {
+                        self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
+                    }
+                }
+        
+                let snake_length = self.snake.body.len();
+                for i in 1..snake_length {
+                    self.snake.body[i] = SnakeCell(temp[i-1].0);
+                }
+        
+                if self.reward_cell == self.snake_head_index() {
+                    if self.snake_length() < self.size {
+                        self.reward_cell = World::set_random_reward_cell(self.size, &self.snake.body)
+                    } else {
+                        self.reward_cell = 1000;
+                    }
+                    self.snake.body.push(SnakeCell(self.snake.body[1].0));
+                    
+                    //self.set_random_reward_cell();
+                }
             },
-            None => {
-                self.snake.body[0] = self.gen_next_snake_cell(&self.snake.direction);
-            }
+            _ => {},
         }
-
-        let snake_length = self.snake.body.len();
-        for i in 1..snake_length {
-            self.snake.body[i] = SnakeCell(temp[i-1].0);
-        }
-
-        if self.reward_cell == self.snake_head_index() {
-            self.snake.body.push(SnakeCell(self.snake.body[1].0));
-            self.reward_cell = World::set_random_reward_cell(self.size, &self.snake.body)
-            //self.set_random_reward_cell();
-        }
-
-
-  
-
 
     }
 

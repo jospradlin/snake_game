@@ -4,18 +4,34 @@ import { wasm } from "webpack";
 
 init().then(wasm => {
   const CELL_SIZE = 20;
-  const WORLD_WIDTH = 16;
+  const WORLD_WIDTH = 5;
   const snakeSpawnIndex = rnd(WORLD_WIDTH * WORLD_WIDTH);
   const STARTING_SNAKE_SIZE = 3;
 
   const world = World.new(WORLD_WIDTH, snakeSpawnIndex, STARTING_SNAKE_SIZE);
   const worldWidth = world.width();
 
+  const gameControlBtn = document.getElementById("game-control-btn");
+  const gameStatus = document.getElementById("game-status");
+  
   const canvas = <HTMLCanvasElement> document.getElementById("snake-canvas");
   const ctx = canvas.getContext("2d")
   
   canvas.height = worldWidth * CELL_SIZE;
   canvas.width =  worldWidth * CELL_SIZE;
+
+  gameControlBtn.addEventListener("click", _ => {
+    const status = world.status();
+    
+    if (status === undefined) {
+      gameControlBtn.textContent = "Playing..."
+      world.start_game();
+      play();
+    } else {
+      location.reload();
+    }
+
+  })
 
   document.addEventListener("keydown", e => {
     switch(e.code) {
@@ -88,6 +104,10 @@ init().then(wasm => {
     ctx.stroke();
   }
 
+  function drawGameStatus() {
+    gameStatus.textContent = world.game_status_text();
+  }
+
   function draw_reward_cell() {
     const rewardCellLocation = world.reward_cell();
     const reward_col = rewardCellLocation % worldWidth;
@@ -104,7 +124,9 @@ init().then(wasm => {
       );
 
     //OLD -const snakeIndex = world.snake_head_index();
-
+      if (rewardCellLocation == 1000) {
+        alert("you won!");
+      }
     ctx.stroke();
   }
   
@@ -113,10 +135,12 @@ init().then(wasm => {
     drawWorld();
     drawSnake();
     draw_reward_cell();
+    drawGameStatus();
   }
 
-  function update() {
-    const fps = 5;
+  function play() {
+
+    const fps = 3;
 
     //setInterval (many times) vs setTimeout (once)
     setTimeout( () => {
@@ -125,10 +149,9 @@ init().then(wasm => {
       render();
 
       // the method takes a callback to be invoked before next re-render
-      requestAnimationFrame(update);
+      requestAnimationFrame(play);
     }, 1000 / fps);
   }
 
-  render();
-  update();
+  drawWorld();
 });
