@@ -1,11 +1,12 @@
 import init, { World, Direction } from "snake_game";
+import { rnd } from "./utils/rnd";
 import { wasm } from "webpack";
 
 init().then(wasm => {
   const CELL_SIZE = 20;
-  const WORLD_WIDTH = 32;
-  const snakeSpawnIndex = Math.floor(Math.random() * (WORLD_WIDTH * WORLD_WIDTH));
-  const STARTING_SNAKE_SIZE = 12;
+  const WORLD_WIDTH = 16;
+  const snakeSpawnIndex = rnd(WORLD_WIDTH * WORLD_WIDTH);
+  const STARTING_SNAKE_SIZE = 3;
 
   const world = World.new(WORLD_WIDTH, snakeSpawnIndex, STARTING_SNAKE_SIZE);
   const worldWidth = world.width();
@@ -16,7 +17,7 @@ init().then(wasm => {
   canvas.height = worldWidth * CELL_SIZE;
   canvas.width =  worldWidth * CELL_SIZE;
 
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", e => {
     switch(e.code) {
       case "ArrowUp":
       case "KeyW":  
@@ -87,9 +88,31 @@ init().then(wasm => {
     ctx.stroke();
   }
 
+  function draw_reward_cell() {
+    const rewardCellLocation = world.reward_cell();
+    const reward_col = rewardCellLocation % worldWidth;
+    const reward_row = Math.floor(rewardCellLocation / worldWidth);
+      
+      ctx.fillStyle = "#ff0000"; 
+
+      ctx.beginPath();
+      ctx.fillRect(
+        reward_col * CELL_SIZE,
+        reward_row * CELL_SIZE,
+        CELL_SIZE,
+        CELL_SIZE
+      );
+
+    //OLD -const snakeIndex = world.snake_head_index();
+
+    ctx.stroke();
+  }
+  
+
   function render() {
     drawWorld();
     drawSnake();
+    draw_reward_cell();
   }
 
   function update() {
