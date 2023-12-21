@@ -4,7 +4,7 @@ import { wasm } from "webpack";
 
 init().then(wasm => {
   const CELL_SIZE = 20;
-  const WORLD_WIDTH = 5;
+  const WORLD_WIDTH = 8;
   const snakeSpawnIndex = rnd(WORLD_WIDTH * WORLD_WIDTH);
   const STARTING_SNAKE_SIZE = 3;
 
@@ -140,7 +140,7 @@ init().then(wasm => {
   }
 
   function play() {
-    const fps = 3;
+    const fps = 5;
     const status = world.status();
     if (status == GameStatus.WON || status == GameStatus.LOST) {
       gameControlBtn.textContent = "Replay?"
